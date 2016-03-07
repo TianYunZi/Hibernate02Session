@@ -7,6 +7,7 @@ public class Books {
 	private String isbn;
 	private String bookName;
 	private int price;
+	private String namePrice;//派生属性
 
 	public Books(String bookName, int price) {
 		this.bookName = bookName;
@@ -45,6 +46,14 @@ public class Books {
 
 	public void setPrice(int price) {
 		this.price = price;
+	}
+
+	public String getNamePrice() {
+		return namePrice;
+	}
+
+	public void setNamePrice(String namePrice) {
+		this.namePrice = namePrice;
 	}
 
 	@Override

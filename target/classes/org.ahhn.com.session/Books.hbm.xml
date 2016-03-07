@@ -2,7 +2,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
-    <class name="org.ahhn.com.session.Books" table="book">
+    <class name="org.ahhn.com.session.Books" table="book" select-before-update="true" dynamic-update="true">
         <id name="isbn" type="java.lang.String">
             <column name="isbn"/>
             <generator class="assigned"/>
@@ -13,5 +13,8 @@
         <property name="price" type="java.lang.Integer">
             <column name="price"/>
         </property>
+
+        <!--设置派生属性-->
+        <property name="namePrice" formula="(select concat(book_name,': ',price) from book b where b.isbn = isbn)"/>
     </class>
 </hibernate-mapping>
