@@ -1,5 +1,8 @@
 package org.ahhn.com.session;
 
+import org.ahhn.com.session.nto1.Customer;
+import org.ahhn.com.session.nto1.Order;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -11,8 +14,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Date;
 
 /**
  * Created by XJX on 2016/3/6.
@@ -25,11 +34,11 @@ public class HibernateTest {
 
 	@Before
 	public void init() {
-		Configuration configuration = new Configuration().configure();
-		ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry();
-		sessionFactory = configuration.buildSessionFactory(serviceRegistry);
-		session = sessionFactory.openSession();
-		transaction = session.beginTransaction();
+//		Configuration configuration = new Configuration().configure();
+//		ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry();
+//		sessionFactory = configuration.buildSessionFactory(serviceRegistry);
+//		session = sessionFactory.openSession();
+//		transaction = session.beginTransaction();
 	}
 
 	@After
@@ -39,20 +48,115 @@ public class HibernateTest {
 		sessionFactory.close();
 	}
 
+
 	@Test
-	public void testPropertyUpdate(){
+	public void testManyToOneDelete() {
+		//在不设定级联关系的情况下, 且 1 这一端的对象有 n 的对象在引用, 不能直接删除 1 这一端的对象
+		Customer customer = (Customer) session.get(Customer.class, 1);
+		session.delete(customer);
+	}
+
+	@Test
+	public void testManyToOneUpdate() {
+		Order order = (Order) session.get(Order.class, 1);
+		order.getCustomer().setCustomerName("BB");
+	}
+
+	@Test
+	public void testManyToOneGet() {
+		//1. 若查询多的一端的一个对象, 则默认情况下, 只查询了多的一端的对象. 而没有查询关联的
+		//1 的那一端的对象!
+		Order order = (Order) session.get(Order.class, 1);
+		System.out.println(order.getOrderName());
+
+		System.out.println(order.getCustomer().getClass().getName());
+
+		session.close();
+
+		//2. 在需要使用到关联的对象时, 才发送对应的 SQL 语句.
+		Customer customer = order.getCustomer();
+		System.out.println(customer.getCustomerName());
+
+		//3. 在查询 Customer 对象时, 由多的一端导航到 1 的一端时,
+		//若此时 session 已被关闭, 则默认情况下
+		//会发生 LazyInitializationException 异常
+
+		//4. 获取 Order 对象时, 默认情况下, 其关联的 Customer 对象是一个代理对象!
+	}
+
+	@Test
+	public void testManyToOne() {
+		Customer customer = new Customer();
+		customer.setCustomerName("AA");
+
+		Order order1 = new Order();
+		order1.setOrderName("ORDER-1");
+		order1.setCustomer(customer);
+
+		Order order2 = new Order();
+		order2.setOrderName("ORDER-2");
+		order2.setCustomer(customer);
+
+		session.save(customer);
+		session.save(order1);
+		session.save(order2);
+
+		//先插入 Order, 再插入 Customer. 3 条 INSERT, 2 条 UPDATE
+		//先插入 n 的一端, 再插入 1 的一端, 会多出 UPDATE 语句!
+		//因为在插入多的一端时, 无法确定 1 的一端的外键值. 所以只能等 1 的一端插入后, 再额外发送 UPDATE 语句.
+		//推荐先插入 1 的一端, 后插入 n 的一端
+	}
+
+	@Test
+	public void testCompent() {
+		Worker worker = new Worker();
+		Pay pay = new Pay();
+
+		pay.setMonthlyPay(100000);
+		pay.setYearPay(200000);
+		pay.setVocationWithPay(10);
+
+		worker.setName("XXX");
+		worker.setPay(pay);
+
+		session.save(worker);
+	}
+
+	@Test
+	public void testBlob() throws IOException, SQLException {
+//		Books books = new Books();
+//		books.setIsbn("1001");
+//		books.setBookName("Java");
+//		books.setPrice(120);
+//		books.setDate(new Date());
+//
+//		InputStream stream = new FileInputStream("1.jpg");
+//		Blob image = Hibernate.getLobCreator(session).createBlob(stream, stream.available());
+//		books.setImage(image);
+//
+//		session.save(books);
+
+		Books books = (Books) session.get(Books.class, "1001");
+		Blob image = books.getImage();
+
+		InputStream inputStream = image.getBinaryStream();
+		System.out.println(inputStream.available());
+	}
+
+	@Test
+	public void testPropertyUpdate() {
 		Books books1 = (Books) session.get(Books.class, "1004");
 		System.out.println(books1.getNamePrice());
 	}
 
 	@Test
-	public void testDynamicUpdate(){
+	public void testDynamicUpdate() {
 		Books books1 = (Books) session.get(Books.class, "1004");
 		books1.setBookName("Scala");
 	}
 
 	@Test
-	public void testDoWork(){
+	public void testDoWork() {
 		session.doWork(new Work() {
 			public void execute(Connection connection) throws SQLException {
 				System.out.println(connection);
@@ -97,7 +201,7 @@ public class HibernateTest {
 	 */
 	@Test
 	public void testSaveOrUpdate() {
-		Books news = new Books("1005", "C", 90);
+		Books news = new Books("1007", "C", 90, new java.sql.Date(new Date().getTime()));
 
 		session.saveOrUpdate(news);
 	}
@@ -172,7 +276,7 @@ public class HibernateTest {
 	 */
 	@Test
 	public void testPersist() {
-		Books books = new Books();
+		Books books = new Books("1005", "C", 90, new java.sql.Date(new Date().getTime()));
 		books.setIsbn("1004");
 		books.setBookName("C++");
 		books.setPrice(130);
@@ -189,7 +293,7 @@ public class HibernateTest {
 	 */
 	@Test
 	public void testSave() {
-		Books books = new Books();
+		Books books = new Books("1005", "C", 90, new java.sql.Date(new Date().getTime()));
 		books.setIsbn("1003");
 		books.setBookName("C++");
 		books.setPrice(130);

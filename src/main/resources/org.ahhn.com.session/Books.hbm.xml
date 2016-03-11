@@ -13,8 +13,23 @@
         <property name="price" type="java.lang.Integer">
             <column name="price"/>
         </property>
+        <property name="date" type="date">
+            <column name="buy_date"/>
+        </property>
 
         <!--设置派生属性-->
         <property name="namePrice" formula="(select concat(book_name,': ',price) from book b where b.isbn = isbn)"/>
+
+        <!--映射大对象-->
+        <!--<property name="content" type="clob"></property>-->
+        <!--<property name="image" type="blob"></property>-->
+
+        <!--指定sql类型-->
+        <property name="content">
+            <column name="content" sql-type="mediumtext"/>
+        </property>
+        <property name="image">
+            <column name="image" sql-type="mediumblob"/>
+        </property>
     </class>
 </hibernate-mapping>

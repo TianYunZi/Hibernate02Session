@@ -10,43 +10,65 @@
       <schema id="1" name="spring"/>
       <table id="2" parent="1" name="account"/>
       <table id="3" parent="1" name="book_stock"/>
-      <table id="4" parent="1" name="book"/>
-      <column id="5" parent="2" name="username">
+      <table id="4" parent="1" name="customers"/>
+      <table id="5" parent="1" name="orders"/>
+      <column id="6" parent="2" name="username">
         <mandatory>1</mandatory>
         <data-type>varchar(50)</data-type>
       </column>
-      <column id="6" parent="2" name="balance">
+      <column id="7" parent="2" name="balance">
         <data-type>int(11)</data-type>
       </column>
-      <key id="7" parent="2" name="PRIMARY">
+      <key id="8" parent="2" name="PRIMARY">
         <columns>username</columns>
         <primary>1</primary>
       </key>
-      <column id="8" parent="3" name="isbn">
+      <column id="9" parent="3" name="isbn">
         <mandatory>1</mandatory>
         <data-type>varchar(50)</data-type>
       </column>
-      <column id="9" parent="3" name="stock">
+      <column id="10" parent="3" name="stock">
         <data-type>int(11)</data-type>
       </column>
-      <key id="10" parent="3" name="PRIMARY">
+      <key id="11" parent="3" name="PRIMARY">
         <columns>isbn</columns>
         <primary>1</primary>
       </key>
-      <column id="11" parent="4" name="isbn">
+      <column id="12" parent="4" name="CUSTOMER_ID">
         <mandatory>1</mandatory>
-        <data-type>varchar(50)</data-type>
-      </column>
-      <column id="12" parent="4" name="book_name">
-        <data-type>varchar(100)</data-type>
-      </column>
-      <column id="13" parent="4" name="price">
         <data-type>int(11)</data-type>
+      </column>
+      <column id="13" parent="4" name="CUSTOMER_NAME">
+        <data-type>varchar(255)</data-type>
       </column>
       <key id="14" parent="4" name="PRIMARY">
-        <columns>isbn</columns>
+        <columns>CUSTOMER_ID</columns>
         <primary>1</primary>
       </key>
+      <column id="15" parent="5" name="ORDER_ID">
+        <mandatory>1</mandatory>
+        <data-type>int(11)</data-type>
+      </column>
+      <column id="16" parent="5" name="ORDER_NAME">
+        <data-type>varchar(255)</data-type>
+      </column>
+      <column id="17" parent="5" name="CUSTOMER_ID">
+        <data-type>int(11)</data-type>
+      </column>
+      <index id="18" parent="5" name="FK_57wwsm6wqqkcr1amp4dtsk5bs">
+        <columns>CUSTOMER_ID</columns>
+        <desc-columns></desc-columns>
+      </index>
+      <key id="19" parent="5" name="PRIMARY">
+        <columns>ORDER_ID</columns>
+        <primary>1</primary>
+      </key>
+      <foreign-key id="20" parent="5" name="FK_57wwsm6wqqkcr1amp4dtsk5bs">
+        <columns>CUSTOMER_ID</columns>
+        <ref-key>~.customers.PRIMARY</ref-key>
+        <cascade-update-rule>restrict</cascade-update-rule>
+        <cascade-delete-rule>restrict</cascade-delete-rule>
+      </foreign-key>
     </database-model>
   </data-source>
 </component>
